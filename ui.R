@@ -92,7 +92,7 @@ shinyUI(fluidPage(
         column(3,
            conditionalPanel(
              condition = "input.ChoixBDD == 'simulations2014' | input.ChoixBDD == 'affectations2014'",
-             selectInput(inputId = "meth.order",
+             selectInput(inputId = "meth.order1",
                label = "Couleurs des subdivisions basées sur",
                choices = list(
                  "Rang médian"="median",
@@ -110,7 +110,7 @@ shinyUI(fluidPage(
            
            conditionalPanel(
              condition = "input.ChoixBDD != 'simulations2014' & input.ChoixBDD != 'affectations2014'",
-             selectInput(inputId = "meth.order",
+             selectInput(inputId = "meth.order2",
                label = "Couleurs des subdivisions basées sur",
                choices = list(
                  "Rang médian"="median",
