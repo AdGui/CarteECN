@@ -884,7 +884,7 @@ shinyServer(function(input, output, session){
       tags$h5("limite :", df$rgL),
       tags$h5("premier quartile :", df$PQuart),
       tags$h5("troisième quartile :", df$TQuart),
-      tags$h4("Modulable selon la spé"),
+      #tags$h4("Modulable selon la spé"),
       if(input$Choix.indic=="pourcent"){
         if(is.na(df2[,indic])){
           tags$h5("% postes pourvus :", "pas de postes proposés")
@@ -1143,7 +1143,7 @@ shinyServer(function(input, output, session){
           tags$h5("limite :", df$rgL),
           tags$h5("premier quartile :", df$PQuart),
           tags$h5("troisième quartile :", df$TQuart),
-          tags$h4("Modulable selon la spé"),
+          #tags$h4("Modulable selon la spé"),
           if(input$Choix.indic=="pourcent"){
             if(is.na(df2[,4])){
               tags$h5("% postes pourvus :", "pas de postes proposés")
@@ -1222,7 +1222,7 @@ shinyServer(function(input, output, session){
           tags$h5("limite :", df$rgL),
           tags$h5("premier quartile :", df$PQuart),
           tags$h5("troisième quartile :", df$TQuart),
-          tags$h4("Modulable selon la spé"),
+          #tags$h4("Modulable selon la spé"),
           if(input$Choix.indic=="pourcent"){
             if(is.na(df2[,indic])){
               tags$h5("% postes pourvus :", "pas de postes proposés")
