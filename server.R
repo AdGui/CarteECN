@@ -86,6 +86,18 @@ CouCon <- function (data, couleur, n, reverse=FALSE){
 
 shinyServer(function(input, output, session){
   
+  vecdum <- c('median', 'median')
+  dum1 <- reactive({return(input$meth.order1)})
+  dum2 <- reactive({return(input$meth.order2)})
+
+  methorder <- reactive({
+    methOrder <- 'median'
+    if(dum1() != vecdum[1]){methOrder <- dum1()}
+    if(dum2() != vecdum[2]){methOrder <- dum2()}
+    vecdum <<- c(dum1(), dum2())
+    return(methOrder)
+  })
+    
   Offre <- reactive({
     if(input$ChoixBDD == "affectations2010"){
       Offre_data <- read.csv("./data/Offre_2010_CESP.csv", fileEncoding = "latin1")
@@ -598,26 +610,27 @@ shinyServer(function(input, output, session){
     return(df)
   })
   
-  # Modification de ColMetro en fonction de input$meth.order
+  # Modification de ColMetro en fonction de meth.order
   observe ({
-    if(input$meth.order %in% c("median","mean","max","min","TQuart","PQuart","rgL")){
+    meth.order <- methorder()
+    if(meth.order %in% c("median","mean","max","min","TQuart","PQuart","rgL")){
       dfS <- donnees_agreg()
-      vec <- which(is.na(dfS[,input$meth.order]))
+      vec <- which(is.na(dfS[,meth.order]))
       if(length(vec)==0){
-        df <- data.frame(regions = dfS$Subdivision, col=CouCon(dfS[, input$meth.order],'YlOrRd', 1000))
+        df <- data.frame(regions = dfS$Subdivision, col=CouCon(dfS[, meth.order],'YlOrRd', 1000))
       } else {
-        dfS[vec,input$meth.order] <- mean(dfS[,input$meth.order], na.rm=TRUE)
-        df <- data.frame(regions = as.character(dfS$Subdivision), col=CouCon(dfS[,input$meth.order],'YlOrRd', 1000), valeur=dfS[,input$meth.order])
+        dfS[vec,meth.order] <- mean(dfS[,meth.order], na.rm=TRUE)
+        df <- data.frame(regions = as.character(dfS$Subdivision), col=CouCon(dfS[,meth.order],'YlOrRd', 1000), valeur=dfS[,meth.order])
         df$col <- as.character(df$col)
         df$col[vec] <- "#FFFFFF"
       }
     }
-    if(input$meth.order %in% c("PPP")){
+    if(meth.order %in% c("PPP")){
       df <- PPPCol()
     }
-    if(input$meth.order %in% c("Sexe", "Age")){
-      if(input$meth.order == "Sexe"){dfS <- sexeD()}
-      if(input$meth.order == "Age"){dfS <- ageD()}    
+    if(meth.order %in% c("Sexe", "Age")){
+      if(meth.order == "Sexe"){dfS <- sexeD()}
+      if(meth.order == "Age"){dfS <- ageD()}    
       vec <- which(is.na(dfS[,2]))
       if(input$ChoixBDD %in% c("simulations2014","affectations2014")){
         df <- data.frame(regions = dfS$Subdivision, col="#FFFFFF")
@@ -632,7 +645,7 @@ shinyServer(function(input, output, session){
         }
       }
     }
-    if(input$meth.order %in% c("Attr")){
+    if(meth.order %in% c("Attr")){
       dfS <- attrD()
       vec <- which(is.na(dfS[,2]))
       if(length(vec)==0){
@@ -790,24 +803,25 @@ shinyServer(function(input, output, session){
   
   #fonction couleur carte DOM TOM
   colDomTom <- function(region){
-    if(input$meth.order %in% c("median","mean","max","min","TQuart","PQuart","rgL")){
+    meth.order <- methorder()
+    if(meth.order %in% c("median","mean","max","min","TQuart","PQuart","rgL")){
       dfS <- donnees_agreg()
-      vec <- which(is.na(dfS[,input$meth.order]))
+      vec <- which(is.na(dfS[,meth.order]))
       if(length(vec)==0){
-        df <- data.frame(regions = dfS$Subdivision, col=CouCon(dfS[, input$meth.order],'YlOrRd', 1000))
+        df <- data.frame(regions = dfS$Subdivision, col=CouCon(dfS[, meth.order],'YlOrRd', 1000))
       } else {
-        dfS[vec,input$meth.order] <- mean(dfS[,input$meth.order], na.rm=TRUE)
-        df <- data.frame(regions = as.character(dfS$Subdivision), col=CouCon(dfS[,input$meth.order],'YlOrRd', 1000), valeur=dfS[,input$meth.order])
+        dfS[vec,meth.order] <- mean(dfS[,meth.order], na.rm=TRUE)
+        df <- data.frame(regions = as.character(dfS$Subdivision), col=CouCon(dfS[,meth.order],'YlOrRd', 1000), valeur=dfS[,meth.order])
         df$col <- as.character(df$col)
         df$col[vec] <- "#FFFFFF"
       }
     }
-    if(input$meth.order %in% c("PPP")){
+    if(meth.order %in% c("PPP")){
       df <- PPPCol()
     }
-    if(input$meth.order %in% c("Sexe","Age")){
-      if(input$meth.order == "Sexe"){dfS <- sexeD()}
-      if(input$meth.order == "Age"){dfS <- ageD()}
+    if(meth.order %in% c("Sexe","Age")){
+      if(meth.order == "Sexe"){dfS <- sexeD()}
+      if(meth.order == "Age"){dfS <- ageD()}
       vec <- which(is.na(dfS[,2]))
       if(input$ChoixBDD %in% c("simulations2014","affectations2014")){
         df <- data.frame(regions = dfS$Subdivision, col="#FFFFFF")
@@ -822,7 +836,7 @@ shinyServer(function(input, output, session){
         }
       }
     }
-    if(input$meth.order %in% c("Attr")){
+    if(meth.order %in% c("Attr")){
       dfS <- attrD()
       vec <- which(is.na(dfS[,2]))
       if(length(vec)==0){
@@ -1010,34 +1024,35 @@ shinyServer(function(input, output, session){
   
   #Couleurs de la légende
   colLegend <- function (x){
-    if(input$meth.order %in% c("median","mean","max","min","TQuart","PQuart","rgL")){
+    meth.order <- methorder()
+    if(meth.order %in% c("median","mean","max","min","TQuart","PQuart","rgL")){
       df <- donnees_agreg()
-      vec <- df[,input$meth.order]
+      vec <- df[,meth.order]
     }
-    if(input$meth.order %in% c("PPP")){
+    if(meth.order %in% c("PPP")){
       df <- PPPCol()
       vec <- df[,3]
     }
-    if(input$meth.order %in% c("Sexe","Age")){
+    if(meth.order %in% c("Sexe","Age")){
       if(input$ChoixBDD %in% c("simulations2014","affectations2014")){
         vec <- c(0,100, rep(50,26))
       } else {
-        if(input$meth.order %in% c("Sexe")){df <- sexeD()}
-        if(input$meth.order %in% c("Age")){df <- ageD()}
+        if(meth.order %in% c("Sexe")){df <- sexeD()}
+        if(meth.order %in% c("Age")){df <- ageD()}
         vec <- df[,2]
       }
     }
-    if(input$meth.order %in% c("Attr")){
+    if(meth.order %in% c("Attr")){
       df <- attrD()
       vec <- df[,2]
     }
     return(unlist(lapply(x, function(x){
       if(x != 0){
-        if(input$meth.order %in% c("median","mean","max","min","TQuart","PQuart","rgL")){
+        if(meth.order %in% c("median","mean","max","min","TQuart","PQuart","rgL")){
           df <- data.frame(valeur = seq(min(vec,na.rm=T),max(vec,na.rm=T),diff(range(vec,na.rm=T))/27), col=col)
           return(as.character(round(df[x,1],0)))
         }
-        if(input$meth.order %in% c("PPP")){
+        if(meth.order %in% c("PPP")){
           df <- data.frame(valeur = seq(max(vec,na.rm=T),min(vec,na.rm=T),-diff(range(vec,na.rm=T))/27), col=col)
           if(input$Choix.indic=="pourcent"){
             return(paste(as.character(round(df[x,1],0)),"%"))
@@ -1045,15 +1060,15 @@ shinyServer(function(input, output, session){
             return(as.character(round(df[x,1],0)))
           }
         }
-        if(input$meth.order %in% c("Sexe")){
+        if(meth.order %in% c("Sexe")){
           df <- data.frame(valeur = seq(min(vec,na.rm=T),max(vec,na.rm=T),diff(range(vec,na.rm=T))/27), col=col)
           return(paste(as.character(round(df[x,1],0)), "%"))
         }
-        if(input$meth.order %in% c("Age")){
+        if(meth.order %in% c("Age")){
           df <- data.frame(valeur = seq(min(vec,na.rm=T),max(vec,na.rm=T),diff(range(vec,na.rm=T))/27), col=col)
           return(paste(as.character(round(df[x,1],1)),"ans"))
         }
-        if(input$meth.order %in% c("Attr")){
+        if(meth.order %in% c("Attr")){
           df <- data.frame(valeur = seq(max(vec,na.rm=T),min(vec,na.rm=T),-diff(range(vec,na.rm=T))/27), col=col)
           return(as.character(round(df[x,1],1)))
         }
