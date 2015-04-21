@@ -91,7 +91,7 @@ shinyUI(fluidPage(
          
         column(3,
           selectInput(inputId = "meth.order",
-            label = "Couleurs des subdivision basée sur",
+            label = "Couleurs des subdivisions basées sur",
             choices = list(
               "Rang médian"="median",
               "Rang moyen"="mean",
@@ -99,6 +99,7 @@ shinyUI(fluidPage(
               "Rang min"="min",
               "Rang - 3e quart"="TQuart",
               "Rang - 1e quart"="PQuart" ,
+              "Rang limite" ="rgL",
               "Postes pourvus" = "PPP",
               "% de femmes" = "Sexe",
               "Age" = "Age",
@@ -190,11 +191,14 @@ shinyUI(fluidPage(
       
       leafletMap(
         "mapmetro", "60%", "800px",
+        #initialTileLayer = NULL,
         initialTileLayer = "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
         initialTileLayerAttribution = NULL,
         options=list(
           center = c(46, 2),
           zoom = 6,
+          maxZoom = 7,
+          minZoom =5,
           maxBounds = list(list(30, -180), list(60, 180)),
           dragging = TRUE,
           doubleClickZoom = FALSE
@@ -203,6 +207,7 @@ shinyUI(fluidPage(
       
       leafletMap(
         "mapReunion", "12%", "200px",
+        #initialTileLayer = NULL,
         initialTileLayer = "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
         initialTileLayerAttribution = HTML('&copy;
         <a href="http://openstreetmap.org">OpenStreetMap</a> contributors,
@@ -211,6 +216,8 @@ shinyUI(fluidPage(
         options=list(
           center = c(-21.15, 55.5),
           zoom = 8,
+          maxZoom = 9,
+          minZoom =7,
           maxBounds = list(list(-30, -180), list(-10, 180)),
           dragging = TRUE,
           doubleClickZoom = FALSE
@@ -219,6 +226,7 @@ shinyUI(fluidPage(
       
       leafletMap(
         "mapMayotte", "12%", "200px",
+        #initialTileLayer = NULL,
         initialTileLayer = "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
         initialTileLayerAttribution = HTML('&copy;
         <a href="http://openstreetmap.org">OpenStreetMap</a> contributors,
@@ -227,6 +235,8 @@ shinyUI(fluidPage(
         options=list(
           center = c(-12.8, 45.15),
           zoom = 9,
+          maxZoom = 10,
+          minZoom = 8,
           maxBounds = list(list(-20, -180), list(-0, 180)),
           dragging = TRUE,
           doubleClickZoom = FALSE
@@ -235,6 +245,7 @@ shinyUI(fluidPage(
       
       leafletMap(
         "mapGuadeloupe", "12%", "200px",
+        #initialTileLayer = NULL,
         initialTileLayer = "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
         initialTileLayerAttribution = HTML('&copy;
                                            <a href="http://openstreetmap.org">OpenStreetMap</a> contributors,
@@ -243,6 +254,8 @@ shinyUI(fluidPage(
         options=list(
           center = c(16.15, -61.4),
           zoom = 8,
+          maxZoom = 9,
+          minZoom =7,
           maxBounds = list(list(0, -180), list(30, 180)),
           dragging = TRUE,
           doubleClickZoom = FALSE
@@ -251,6 +264,7 @@ shinyUI(fluidPage(
       
       leafletMap(
         "mapGuyane", "12%", "200px",
+        #initialTileLayer = NULL,
         initialTileLayer = "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
         initialTileLayerAttribution = HTML('&copy;
                                            <a href="http://openstreetmap.org">OpenStreetMap</a> contributors,
@@ -259,6 +273,8 @@ shinyUI(fluidPage(
         options=list(
           center = c(3.9, -53.1),
           zoom = 6,
+          maxZoom = 7,
+          minZoom =5,
           maxBounds = list(list(-16, -180), list(24, 180)),
           dragging = TRUE,
           doubleClickZoom = FALSE
@@ -267,6 +283,7 @@ shinyUI(fluidPage(
       
       leafletMap(
         "mapMartinique", "12%", "200px",
+        #initialTileLayer = NULL,
         initialTileLayer = "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
         initialTileLayerAttribution = HTML('&copy;
                                            <a href="http://openstreetmap.org">OpenStreetMap</a> contributors,
@@ -275,11 +292,21 @@ shinyUI(fluidPage(
         options=list(
           center = c(14.65, -61),
           zoom = 8,
+          maxZoom = 9,
+          minZoom =7,
           maxBounds = list(list(0, -180), list(30, 180)),
           dragging = TRUE,
           doubleClickZoom = FALSE
         )
       )
+    ),
+    
+    tabPanel(h4("Notice"),
+             h3("Notice",style="text-decoration:underline;"),
+             p("Les étudiants CESP comme ceux des armées ne sont pas inclus aux analyses pour 2014 (y compris pour l'avancement des choix)."),
+             p("Pour les autres années, ils sont incorporés aux résultats sans distinction possible. De ce fait une correction a du être faite sur les données d'offre de poste : les offres de postes classiques et celles pour les CESP ont été fusionnées."),
+             p("De ce fait le calcul des rangs limites pour les années 2010-2013 part de l'hypothèse que les étudiants CESP sont classés derniers de leur spécialité/subdivision (probable pour les spécialités médicales et chirurgicales, improbable pour la MG)."),
+             p("L\'ensemble des données sont issues de : ", a("https://www.cngsante.fr/chiron2014/celine/listing.html", href="https://www.cngsante.fr/chiron2014/celine/listing.html"), "ainsi que sur les arrêtés de classement et d'affectations.")
     )
   ),
   

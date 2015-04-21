@@ -10,6 +10,8 @@ library("leaflet")
 ### Etat d'avancement :
 # Couleur : données agrégées OK, PPP OK, Sexe OK, Attractivité OK, Age OK
 # Popup : agrégation des 3 PPP + age
+# Données agrégées en fonction de spé : OK
+# Rang limites : pb NA + calul des rangs limites mal fait
 
 #vecteurs d'appariemment caractères <-> numériques spé/subdivisions
 Offre_vec_ville <- c(015,020,018,016,017,019,022,024,023,021,038,025,026,027,029,032,028,030,033,031,035,034,036,037,042,040,039,041,000)
@@ -21,7 +23,7 @@ xlab_spe.2 <- c("AR","Bi","GyM","GyO","MT","MG","Psy","Ped","SP","ChOr","ChG","C
 #xlab_spe.2 <- c("AR","Bi","GyM","GyO","MT","MG","Ped","Psy","SP","ChG","ChOr","ChN","Opht","ORL","An","Ca","De","En","Ga","GM","He","MI","MN","MPR","Nep","Neu","Onc","Pne","Rad","Rhu")
 indic_spe <- c(004,003,005,009,006,011,010,002,007,032,028,029,030,031,012,013,014,015,016,017,018,019,020,021,023,022,024,025,026,027)
 nomRegionMetro <- c("Aix-Marseilles","Amiens","Angers","Besançon","Bordeaux","Brest","Caen","Clermont-Ferrand","Dijon","Grenoble","l'IDF","Lille","Limoges","Lyon","Montpellier","Nancy","Nantes","Nice","Poitiers","Reims","Rennes","Rouen","St-Etienne","Strasbourg","Toulouse","Tours")
-
+#xlab_spe[order(factor(indic_spe, levels=Offre_vec_spe[1:30]))]
 #load("./data/cartef.RData")
 load("./data/leaflet.RData")
 
@@ -49,6 +51,8 @@ CouCon <- function (data, couleur, n, reverse=FALSE){
   return(colData <- as.character(unlist(colData)))
 }
 
+### Construction dfCoordPop
+
 #listCoordPop <- lapply(ECNmetro@polygons, function(y){
 #  lapply(y@Polygons, function(x) {
 #    c(mean(x@coords[,1]),mean(x@coords[,2]))
@@ -59,25 +63,25 @@ CouCon <- function (data, couleur, n, reverse=FALSE){
 
 #dfCoordPop <- data.frame(lat=listCoordPop[seq(2,128,2)],lng=listCoordPop[seq(1,127,2)])
 
-df <- data.frame(lng=leaMetro$x, lat=leaMetro$y)
-df$y <- rep(1, length(leaMetro$x))
-for(i in 2:length(df$lng)){
-  if (is.na(df$lng[i])){df$y[i] <- df$y[i-1]+1} else {df$y[i] <- df$y[i-1]}
-}
+#df <- data.frame(lng=leaMetro$x, lat=leaMetro$y)
+#df$y <- rep(1, length(leaMetro$x))
+#for(i in 2:length(df$lng)){
+#  if (is.na(df$lng[i])){df$y[i] <- df$y[i-1]+1} else {df$y[i] <- df$y[i-1]}
+#}
 
-list <- split(df$lng,df$y)
+#list <- split(df$lng,df$y)
 
-lng <- unlist(lapply(list, function(x) {
-  mean(x, na.rm=T)
-}))
+#lng <- unlist(lapply(list, function(x) {
+#  mean(x, na.rm=T)
+#}))
 
-list <- split(df$lat,df$y)
+#list <- split(df$lat,df$y)
 
-lat <- unlist(lapply(list, function(x) {
-  mean(x, na.rm=T)
-}))
+#lat <- unlist(lapply(list, function(x) {
+#  mean(x, na.rm=T)
+#}))
 
-dfCoordPop <- data.frame(lng=lng[-65], lat=lat[-65])
+#dfCoordPop <- data.frame(lng=lng[-65], lat=lat[-65])
 
 
 shinyServer(function(input, output, session){
@@ -100,7 +104,8 @@ shinyServer(function(input, output, session){
     }
     row.names(Offre_data) <- Offre_data[,1]
     Offre_data <- Offre_data[,-1]
-    Offre_data
+    names(Offre_data) <- xlab_spe[order(factor(indic_spe, levels=Offre_vec_spe[1:30]))]
+    return(Offre_data)
   })
   
   dataset <- reactive({
@@ -124,11 +129,15 @@ shinyServer(function(input, output, session){
     }
     ECN_data <- read.csv(con, sep=",")
     
-    vec.spe <- c()
-    vec.sub <- c()
+    vec.spe <- rep(NA, length(ECN_data[,1]))
+    vec.sub <- rep(NA, length(ECN_data[,1]))
     
     if(input$ChoixBDD %in% c("affectations2014","simulations2014")){
       ECN_data <- ECN_data[,-1]
+      ECN_data$Discipline <- as.numeric(substr(ECN_data$SubDis, 5, 7))
+      ECN_data$Discipline <- mapvalues(ECN_data[,'Discipline'],from=indic_spe, to=xlab_spe)      
+      ECN_data$Subdivision <- as.numeric(substr(ECN_data$SubDis, 3, 4))
+      ECN_data$Subdivision <- mapvalues(ECN_data[,'Subdivision'],from=indic_ville, to=xlab_ville)
     } else {
       for(i in 1:length(ECN_data[,1])){
         vec.sub[i] <- indic_ville[which(xlab_ville==ECN_data[i,9])]
@@ -155,7 +164,7 @@ shinyServer(function(input, output, session){
       ECN_data <- data.frame("sexe"=ECN_data[,4],"ddm"=ECN_data[,6],"dda"=ECN_data[,7],"Etudiant"=ECN_data[,8],"v5"=1,"v6"=1,"Subdivision"=ECN_data[,9],"Discipline"=ECN_data[,10],"v9"=1,"v10"=1,"SubDis"=paste0("[",vec.sub,vec.spe,"]"))
     }
     colnames(ECN_data)[9] <-"Désir (non officiel)"
-    ECN_data
+    return(ECN_data)
   })
   
   donnees_agreg <- reactive({
@@ -165,19 +174,77 @@ shinyServer(function(input, output, session){
     } else {
       ECN_data.dum <- ECN_data
     }
+    if(input$Spe == 0){} else {
+      spe <- xlab_spe[which(indic_spe == input$Spe)]
+      ECN_data.dum <- ECN_data.dum[which(ECN_data.dum$Discipline ==  spe),]
+    }
     ECN_data.dum[,7] <- as.character(ECN_data.dum[,7])
     ECN_data.dum[,7] <- as.factor(ECN_data.dum[,7])
     ECN_data.dum[,4] <- as.numeric(ECN_data.dum[,4])
-    df_corr_ville <- data.frame(levels(ECN_data.dum[,7]),xlab_ville)
-    ECN_data.dum[,7] <- mapvalues(ECN_data.dum[,7],from=levels(ECN_data.dum[,7]),to=xlab_ville)
     df_order <- ddply(ECN_data.dum, .(Subdivision), summarize, 
-                      median=median(Etudiant,na.rm=T),
-                      mean=mean(Etudiant,na.rm=T),
-                      max=max(Etudiant,na.rm=T),
-                      min=min(Etudiant,na.rm=T),
-                      TQuart=quantile(Etudiant, 0.75,na.rm=T),
-                      PQuart=quantile(Etudiant, 0.25,na.rm=T)
+      median=median(Etudiant,na.rm=T),
+      mean=mean(Etudiant,na.rm=T),
+      max=max(Etudiant,na.rm=T),
+      min=min(Etudiant,na.rm=T),
+      TQuart=quantile(Etudiant, 0.75,na.rm=T),
+      PQuart=quantile(Etudiant, 0.25,na.rm=T),
+      l = length(Etudiant)
     )
+    if(length(levels(ECN_data.dum[,7])) == 28){} else {
+      vec <- xlab_ville[which(!(xlab_ville %in% levels(ECN_data.dum[,7])))]
+      dfdum <- data.frame(Subdivision=vec, median=NA, mean=NA, max=NA,min=NA,TQuart=NA, PQuart=NA, l=0)
+      df_order <- rbind(df_order, dfdum)
+      df_order <- df_order[order(as.character(df_order$Subdivision)),]
+      df_order$Subdivision <- factor(df_order$Subdivision, levels=df_order$Subdivision)
+    }
+    ### rangs limites à developper
+    if(input$ChoixBDD == "affectations2010"){
+      Offre_data_T <- read.csv("./data/Offre_2010_CESP.csv", fileEncoding = "latin1")
+    }
+    if(input$ChoixBDD == "affectations2011"){
+      Offre_data_T <- read.csv("./data/Offre_2011.csv", fileEncoding = "UTF-8")
+    }
+    if(input$ChoixBDD == "affectations2012"){
+      Offre_data_T <- read.csv("./data/Offre_2012.csv", fileEncoding = "UTF-8")
+    }
+    if(input$ChoixBDD == "affectations2013"){
+      Offre_data_T <- read.csv("./data/Offre_2013.csv", fileEncoding = "UTF-8", sep=";")
+    }
+    if(input$ChoixBDD %in% c("simulations2014","affectations2014")){
+      Offre_data_T <- read.csv("./data/Offre_2014.csv",fileEncoding = "UTF-8")
+    }
+    row.names(Offre_data_T) <- Offre_data_T[,1]
+    Offre_data_T <- Offre_data_T[,-1]
+    names(Offre_data_T) <- xlab_spe[order(factor(indic_spe, levels=Offre_vec_spe[1:30]))]
+    if(input$Spe == 0){
+      df_order$o <- Offre_data_T[order(as.character(row.names(Offre_data_T)[1:28])), 31]
+      df_order$d <- df_order$o - df_order$l
+      rgL <- rep(NA, 28)
+      df_order$rgL <- unlist(lapply(split(df_order, df_order$Subdivision), function(x){
+        if(x$d == 0 & x$o != 0){rgL <- x$max}
+        if(x$d > 0){rgL <- max(ECN_data.dum$Etudiant)+1}
+        if(x$d < 0 & !(is.na(x$d))){
+          vec <- ECN_data.dum$Etudiant[which(ECN_data.dum$Subdivision == x$Subdivision)]
+          rgL <- vec[length(vec)+x$d]
+        }
+        return(rgL)
+      }))
+    } else {
+      df_order$o <- Offre_data_T[order(as.character(row.names(Offre_data_T)[1:28])), spe]
+      df_order$o[which(is.na(df_order$o))] <- 0
+      df_order$d <- df_order$o - df_order$l
+      rgL <- rep(NA, 28)
+      df_order$rgL <- unlist(lapply(split(df_order, df_order$Subdivision), function(x){
+        if(x$d == 0 & x$o != 0){rgL <- x$max}
+        if(x$d > 0 & x$o != 0){rgL <- max(ECN_data$Etudiant)+1}
+        if(x$d < 0 & x$o != 0){
+          vec <- ECN_data.dum$Etudiant[which(ECN_data$Discipline == spe)]
+          rgL <- vec[length(vec)+x$d]
+        }
+        if(x$o == 0){rgL <- NA}
+        return(rgL)
+      }))
+    }
     return(df_order)
   })
   
@@ -533,9 +600,17 @@ shinyServer(function(input, output, session){
   
   # Modification de ColMetro en fonction de input$meth.order
   observe ({
-    if(input$meth.order %in% c("median","mean","max","min","TQuart","PQuart")){
-      df_order_agreg <- donnees_agreg()
-      df <- data.frame(regions = df_order_agreg$Subdivision, col=CouCon(df_order_agreg[, input$meth.order],'YlOrRd',1000))
+    if(input$meth.order %in% c("median","mean","max","min","TQuart","PQuart","rgL")){
+      dfS <- donnees_agreg()
+      vec <- which(is.na(dfS[,input$meth.order]))
+      if(length(vec)==0){
+        df <- data.frame(regions = dfS$Subdivision, col=CouCon(dfS[, input$meth.order],'YlOrRd', 1000))
+      } else {
+        dfS[vec,input$meth.order] <- mean(dfS[,input$meth.order], na.rm=TRUE)
+        df <- data.frame(regions = as.character(dfS$Subdivision), col=CouCon(dfS[,input$meth.order],'YlOrRd', 1000), valeur=dfS[,input$meth.order])
+        df$col <- as.character(df$col)
+        df$col[vec] <- "#FFFFFF"
+      }
     }
     if(input$meth.order %in% c("PPP")){
       df <- PPPCol()
@@ -559,7 +634,6 @@ shinyServer(function(input, output, session){
     }
     if(input$meth.order %in% c("Attr")){
       dfS <- attrD()
-      print(dfS)
       vec <- which(is.na(dfS[,2]))
       if(length(vec)==0){
         df <- data.frame(regions = dfS$Subdivision, col=CouCon(dfS[, "valeur"],'YlOrRd',1000, reverse=TRUE))
@@ -632,20 +706,19 @@ shinyServer(function(input, output, session){
     mapmetro$clearPopups()
     
     event <- input$mapmetro_shape_click
-    if (is.null(event))
-      return()
-    
-    dfOrderMetro <- dfOrderMetro()
+    if (is.null(event)){ return()} else {return()}
+    if (is.na(event)){
+    #dfOrderMetro <- dfOrderMetro()
     df <- dfOrderMetro[which(leaMetro$names == event$id),]
-    df2 <- dfOrderMetroSel()
+    #df2 <- dfOrderMetroSel()
     df2 <- df2[which(leaMetro$names == event$id),]
     if(input$ChoixBDD %in% c("simulations2014","affectations2014")){} else {
-      df3 <- dfMetroSexe()
+      #df3 <- dfMetroSexe()
       df3 <- df3[which(leaMetro$names == event$id),]
-      df4 <- dfMetroAge()
+      #df4 <- dfMetroAge()
       df4 <- df4[which(leaMetro$names == event$id),]
     }
-    df5 <- dfMetroAttr()
+    #df5 <- dfMetroAttr()
     df5 <- df5[which(leaMetro$names == event$id),]
     
     content <- as.character(tagList(
@@ -655,9 +728,9 @@ shinyServer(function(input, output, session){
       tags$h5("moyen :", round(df$mean,1)),
       tags$h5("minimum :", df$min),
       tags$h5("maximum :", df$max),
+      tags$h5("limite :", df$rgL),
       tags$h5("premier quartile :", df$PQuart),
       tags$h5("troisième quartile :", df$TQuart),
-      tags$h4("Modulable selon la spé"),
       if(input$Choix.indic=="pourcent"){
         if(is.na(df2[,4])){
           tags$h5("% postes pourvus :", "pas de postes proposés")
@@ -702,13 +775,14 @@ shinyServer(function(input, output, session){
       },
       tags$h5("Attractivité :", round(df5[,2],1))
     ))
-    mapmetro$showPopup(df$lat,df$lng,content)
+    }
+    #mapmetro$showPopup(df$lat,df$lng,content)
   })
   
   #Création des polygones Dom-Tom
   #Reunion
   mapReunion <- createLeafletMap(session, "mapReunion")
-  colReunion <- c()  
+  colReunion <- c()
   
   session$onFlushed(once=TRUE, function(){
     drawMap(lea=leaReunion, map=mapReunion, col=colReunion)
@@ -716,9 +790,17 @@ shinyServer(function(input, output, session){
   
   #fonction couleur carte DOM TOM
   colDomTom <- function(region){
-    if(input$meth.order %in% c("median","mean","max","min","TQuart","PQuart")){
-      df_order_agreg <- donnees_agreg()
-      df <- data.frame(regions = df_order_agreg$Subdivision, col=CouCon(df_order_agreg[, input$meth.order],'YlOrRd',1000))
+    if(input$meth.order %in% c("median","mean","max","min","TQuart","PQuart","rgL")){
+      dfS <- donnees_agreg()
+      vec <- which(is.na(dfS[,input$meth.order]))
+      if(length(vec)==0){
+        df <- data.frame(regions = dfS$Subdivision, col=CouCon(dfS[, input$meth.order],'YlOrRd', 1000))
+      } else {
+        dfS[vec,input$meth.order] <- mean(dfS[,input$meth.order], na.rm=TRUE)
+        df <- data.frame(regions = as.character(dfS$Subdivision), col=CouCon(dfS[,input$meth.order],'YlOrRd', 1000), valeur=dfS[,input$meth.order])
+        df$col <- as.character(df$col)
+        df$col[vec] <- "#FFFFFF"
+      }
     }
     if(input$meth.order %in% c("PPP")){
       df <- PPPCol()
@@ -799,6 +881,7 @@ shinyServer(function(input, output, session){
       tags$h5("moyen :", round(df$mean,1)),
       tags$h5("minimum :", df$min),
       tags$h5("maximum :", df$max),
+      tags$h5("limite :", df$rgL),
       tags$h5("premier quartile :", df$PQuart),
       tags$h5("troisième quartile :", df$TQuart),
       tags$h4("Modulable selon la spé"),
@@ -850,7 +933,7 @@ shinyServer(function(input, output, session){
   }
   
   observe({
-    showPopupDomTom(click=input$mapReunion_shape_click, region='OceI', lea=leaReunion)
+    #showPopupDomTom(click=input$mapReunion_shape_click, region='OceI', lea=leaReunion)
   })
   
   #Mayotte
@@ -868,7 +951,7 @@ shinyServer(function(input, output, session){
   })
   
   observe({
-    showPopupDomTom(click=input$mapMayotte_shape_click, region='OceI', lea=leaMayotte)
+    #showPopupDomTom(click=input$mapMayotte_shape_click, region='OceI', lea=leaMayotte)
   })
   
   #Guyane
@@ -886,7 +969,7 @@ shinyServer(function(input, output, session){
   })
   
   observe({
-    showPopupDomTom(click=input$mapGuyane_shape_click, region='AntG', lea=leaGuyane)
+    #showPopupDomTom(click=input$mapGuyane_shape_click, region='AntG', lea=leaGuyane)
   })
   
   #Guadeloupe
@@ -904,7 +987,7 @@ shinyServer(function(input, output, session){
   })
   
   observe({
-    showPopupDomTom(click=input$mapGuadeloupe_shape_click, region='AntG', lea=leaGuadeloupe)
+    #showPopupDomTom(click=input$mapGuadeloupe_shape_click, region='AntG', lea=leaGuadeloupe)
   })
   
   #Martinique
@@ -922,12 +1005,12 @@ shinyServer(function(input, output, session){
   })
   
   observe({
-    showPopupDomTom(click=input$mapMartinique_shape_click, region='AntG', lea=leaMartinique)
+    #showPopupDomTom(click=input$mapMartinique_shape_click, region='AntG', lea=leaMartinique)
   })
   
   #Couleurs de la légende
   colLegend <- function (x){
-    if(input$meth.order %in% c("median","mean","max","min","TQuart","PQuart")){
+    if(input$meth.order %in% c("median","mean","max","min","TQuart","PQuart","rgL")){
       df <- donnees_agreg()
       vec <- df[,input$meth.order]
     }
@@ -950,7 +1033,7 @@ shinyServer(function(input, output, session){
     }
     return(unlist(lapply(x, function(x){
       if(x != 0){
-        if(input$meth.order %in% c("median","mean","max","min","TQuart","PQuart")){
+        if(input$meth.order %in% c("median","mean","max","min","TQuart","PQuart","rgL")){
           df <- data.frame(valeur = seq(min(vec,na.rm=T),max(vec,na.rm=T),diff(range(vec,na.rm=T))/27), col=col)
           return(as.character(round(df[x,1],0)))
         }
@@ -1057,6 +1140,7 @@ shinyServer(function(input, output, session){
           tags$h5("moyen :", round(df$mean,1)),
           tags$h5("minimum :", df$min),
           tags$h5("maximum :", df$max),
+          tags$h5("limite :", df$rgL),
           tags$h5("premier quartile :", df$PQuart),
           tags$h5("troisième quartile :", df$TQuart),
           tags$h4("Modulable selon la spé"),
@@ -1135,6 +1219,7 @@ shinyServer(function(input, output, session){
           tags$h5("moyen :", round(df$mean,1)),
           tags$h5("minimum :", df$min),
           tags$h5("maximum :", df$max),
+          tags$h5("limite :", df$rgL),
           tags$h5("premier quartile :", df$PQuart),
           tags$h5("troisième quartile :", df$TQuart),
           tags$h4("Modulable selon la spé"),
