@@ -88,26 +88,47 @@ shinyUI(fluidPage(
     tabPanel(h4("Carto"), 
       fluidRow(
         column(2,h4("Options : ")),
-         
-        column(3,
-          selectInput(inputId = "meth.order",
-            label = "Couleurs des subdivisions basées sur",
-            choices = list(
-              "Rang médian"="median",
-              "Rang moyen"="mean",
-              "Rang max"="max",
-              "Rang min"="min",
-              "Rang - 3e quart"="TQuart",
-              "Rang - 1e quart"="PQuart" ,
-              "Rang limite" ="rgL",
-              "Postes pourvus" = "PPP",
-              "% de femmes" = "Sexe",
-              "Age" = "Age",
-              "Attractivité" ="Attr"
-            )
-          )
-        ),
         
+        column(3,
+           conditionalPanel(
+             condition = "input.ChoixBDD == 'simulations2014' | input.ChoixBDD == 'affectations2014'",
+             selectInput(inputId = "meth.order",
+               label = "Couleurs des subdivisions basées sur",
+               choices = list(
+                 "Rang médian"="median",
+                 "Rang moyen"="mean",
+                 "Rang max"="max",
+                 "Rang min"="min",
+                 "Rang - 3e quart"="TQuart",
+                 "Rang - 1e quart"="PQuart" ,
+                 "Rang limite" ="rgL",
+                 "Postes pourvus" = "PPP",
+                 "Attractivité" ="Attr"
+               )
+             )
+           ),
+           
+           conditionalPanel(
+             condition = "input.ChoixBDD != 'simulations2014' & input.ChoixBDD != 'affectations2014'",
+             selectInput(inputId = "meth.order",
+               label = "Couleurs des subdivisions basées sur",
+               choices = list(
+                 "Rang médian"="median",
+                 "Rang moyen"="mean",
+                 "Rang max"="max",
+                 "Rang min"="min",
+                 "Rang - 3e quart"="TQuart",
+                 "Rang - 1e quart"="PQuart" ,
+                 "Rang limite" ="rgL",
+                 "Postes pourvus" = "PPP",
+                 "% de femmes" = "Sexe",
+                 "Age" = "Age",
+                 "Attractivité" ="Attr"
+               )
+             )
+           )
+        ),
+
         column(6,
            radioButtons(inputId="Choix.indic", 
               label="Indicateur postes pourvus :",
@@ -131,35 +152,35 @@ shinyUI(fluidPage(
         ),
         
         column(9,
-               column(4,
-                      conditionalPanel(
-                        condition = "input.Restcand == 'oui'",
-                        sliderInput(
-                          inputId="Rang.min",
-                          label="Borne 1", 
-                          min=1,
-                          max=8304,
-                          value=1,
-                          step = 50,
-                          ticks = FALSE
-                        )
-                      )
-               ),
+          column(4,
+            conditionalPanel(
+              condition = "input.Restcand == 'oui'",
+              sliderInput(
+                inputId="Rang.min",
+                label="Borne 1", 
+                min=1,
+                max=8304,
+                value=1,
+                step = 50,
+                ticks = FALSE
+              )
+            )
+          ),
                
-               column(4, offset=1,
-                      conditionalPanel(
-                        condition = "input.Restcand == 'oui'",
-                        sliderInput(
-                          inputId="Rang.max",
-                          label="Borne 2", 
-                          min=1,
-                          max=8304,
-                          value=8304,
-                          step = 50,
-                          ticks = FALSE
-                        )
-                      )
-               )
+          column(4, offset=1,
+            conditionalPanel(
+              condition = "input.Restcand == 'oui'",
+              sliderInput(
+                inputId="Rang.max",
+                label="Borne 2", 
+                min=1,
+                max=8304,
+                value=8304,
+                step = 50,
+                ticks = FALSE
+              )
+            )
+          )
         )
       ),
       
