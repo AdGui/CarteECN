@@ -319,6 +319,16 @@ shinyUI(fluidPage(
           dragging = TRUE,
           doubleClickZoom = FALSE
         )
+      ),
+      
+      absolutePanel(
+        left = "82%", top = "65%", width="auto", style = "", fixed=TRUE, class = "floater",
+        uiOutput("Legende")
+      ),
+      
+      absolutePanel(
+        left = "2%", top = "60%", width = "17%", fixed=TRUE, class = "floater",
+        uiOutput("Info")
       )
     ),
     
@@ -329,15 +339,5 @@ shinyUI(fluidPage(
              p("De ce fait le calcul des rangs limites pour les années 2010-2013 part de l'hypothèse que les étudiants CESP sont classés derniers de leur spécialité/subdivision (probable pour les spécialités médicales et chirurgicales, improbable pour la MG)."),
              p("L\'ensemble des données sont issues de : ", a("https://www.cngsante.fr/chiron2014/celine/listing.html", href="https://www.cngsante.fr/chiron2014/celine/listing.html"), "ainsi que sur les arrêtés de classement et d'affectations.")
     )
-  ),
-  
-  absolutePanel(
-    left = "82%", top = "65%", width="auto", style = "", fixed=TRUE, class = "floater",
-    uiOutput("Legende")
-  ),
-  
-  absolutePanel(
-    left = "2%", top = "60%", width = "17%", fixed=TRUE, class = "floater",
-    uiOutput("Info")
   )
 ))
