@@ -1,7 +1,7 @@
 # CarteECN
 Carte dynamique des données ECN 2010-2014
 
-Consultable à l'adresse : http://shiny.adgui.eu ou http://shiny.adgui.eu/CartoECN-leaflet/ (possibilité de blocage en institution : server shiny perso).
+Consultable à l'adresse : http://shiny.adgui.eu ou http://shiny.adgui.eu/CartoECN-leaflet/.
 
 Lancement en local (nécessite l'installation du package shiny + ceux requis dans server.R) :
 ```r
